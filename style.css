@@ -1,0 +1,10 @@
+/* We are specifiying styles for the HTML document
+and its body */
+html, body {
+    /* Removing padding and margin makes the game
+    display all the way to the edges of the screen */
+    padding: 0;
+    margin: 0;
+    /* Hiding overflow makes scrollbars disappear */
+    overflow: hidden;
+}

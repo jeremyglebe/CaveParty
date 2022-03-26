@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- This specifies what kind of text encoding we're using -->
+    <meta charset="utf-8">
+    <!-- Viewport settings makes sure the game scales right on mobile -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <!-- For more meta tags that can make your game work well as a
+            progressive web app or mobile bookmark, see this article:
+            https://blog.ourcade.co/posts/2020/native-like-web-app-for-your-html5-game/
+        -->
+
+    <!-- This is the title of your game, shown in the browser tab -->
+    <title>P5 Game</title>
+    <!-- The style sheet lets us change how document is formatted -->
+    <link href="style.css" rel="stylesheet" type="text/css" />
+
+    <!-- Load the Phaser library -->
+    <script src="lib/phaser.js"></script>
+    <!-- Libraries for multiplayer - PeerRooms and its dependency peer.js -->
+    <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <script src="lib/PeerRooms.js"></script>
+    <script src="lib/Multiplayer.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/gh/jeremyglebe/PeerRooms@master/PeerRooms.js"></script> -->
+    <!-- Neat tools -->
+    <script src="lib/screen-scale.js"></script>
+    <!-- Scenes -->
+    <script src="scenes/Join.js"></script>
+    <script src="scenes/Lobby.js"></script>
+</head>
+
+<body>
+    <div id="game"></div>
+    <!-- This is the main script which runs our game -->
+    <script src="app.js"></script>
+</body>
+
+</html>
