@@ -11,7 +11,8 @@ const gameConfig = {
     },
     scene: [
         JoinScene,
-        LobbyScene
+        LobbyScene,
+        QuestScene
     ],
     dom: {
         createContainer: true

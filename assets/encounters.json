@@ -1,0 +1,44 @@
+{
+    "Test Quest": {
+        "START": {
+            "type": "choice",
+            "text": "choose someone to fight",
+            "choices": [
+                {
+                    "text": "Fight a gnome",
+                    "target": "Gnome"
+                },
+                {
+                    "text": "Fight a dragon",
+                    "target": "Dragon"
+                }
+            ]
+        },
+        "Gnome": {
+            "type": "fight",
+            "name": "Furious Gnome",
+            "image": "sketch",
+            "health": 100,
+            "damage": 15,
+            "target": "Reward"
+        },
+        "Dragon": {
+            "type": "fight",
+            "name": "Smokey Dragon",
+            "image": "sketch",
+            "health": 420,
+            "damage": 69,
+            "target": "Reward"
+        },
+        "Reward": {
+            "type": "trade",
+            "text": "You won! Take this payment for your trouble! (40gp)",
+            "gold": 40,
+            "target": "FINISH"
+        },
+        "FINISH": {
+            "type": "end",
+            "text": "Your quest has ended..."
+        }
+    }
+}

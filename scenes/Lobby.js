@@ -2,6 +2,7 @@ class LobbyScene extends Phaser.Scene {
     constructor() {
         super("Lobby");
         this.players = {};
+        this.quests = null;
         this.gameIDText = null;
         this.playerListDiv = null;
         this.panel = null;
@@ -17,9 +18,11 @@ class LobbyScene extends Phaser.Scene {
 
     preload() {
         this.load.image('brush', 'assets/images/tiny.png');
+        this.load.json('quests', 'assets/encounters.json');
     }
 
     create() {
+        this.quests = this.cache.json.get('quests');
         this.gameIDText = this.add.text(GAME_SCALE.center.x, 40, `Game ID: ${MULTI.bossID}`, {
             color: 'white',
             fontSize: '36px'
@@ -40,7 +43,6 @@ class LobbyScene extends Phaser.Scene {
 
         MULTI.on('player joined', this.onOtherJoined, this);
         MULTI.on('message received', this.onMessageReceived, this);
-        MULTI.on('peer list received', (list) => { console.log(list); });
     }
 
     update() {
@@ -83,6 +85,9 @@ class LobbyScene extends Phaser.Scene {
                     }).setOrigin(0.5);
                 }
             });
+        }
+        else if (data.type == 'start game') {
+            this.scene.start("Quest", data.quest);
         }
     }
 
@@ -172,10 +177,14 @@ class LobbyScene extends Phaser.Scene {
             }, "Start Game")
                 .addListener('click')
                 .on('click', () => {
+                    const questList = Object.values(this.quests)
+                    const quest = questList[Math.floor(Math.random() * questList.length)]
+                    console.log(quest);
                     MULTI.broadcast({
-                        type: 'start game'
+                        type: 'start game',
+                        quest: quest
                     });
-                    this.scene.start('Quest');
+                    this.scene.start('Quest', quest);
                 });
         }
     }
