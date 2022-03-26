@@ -5,8 +5,10 @@ class QuestScene extends Phaser.Scene {
         this.div = null;
     }
 
-    init(quest) {
-        this.quest = quest;
+    init(data) {
+        this.quest = data.quest;
+        this.players = data.players;
+        this.leader = data.leader;
         this.votes = [];
         console.log(this.quest);
     }
@@ -32,12 +34,11 @@ class QuestScene extends Phaser.Scene {
 
         MULTI.on('message received', (peerID, data) => {
             if (data.type == 'vote' && MULTI.isBoss()) {
-                this.votes.push({
-                    id: peerID,
-                    choice: data.choice
-                });
+                this.addVote(peerID, data.choice);
             }
-            console.log(this.votes);
+            else if (data.type == 'change stage' && MULTI.isBoss(peerID)) {
+                this.setStage(data.stage)
+            }
         });
     }
 
@@ -49,7 +50,7 @@ class QuestScene extends Phaser.Scene {
         }
         else if (stage.type == 'fight') {
             if (stage.image == 'sketch') {
-
+                console.log("Starting a fight boi");
             }
             else {
 
@@ -81,16 +82,30 @@ class QuestScene extends Phaser.Scene {
 
     makeChoice(index, choice) {
         if (MULTI.isBoss()) {
-            this.votes.push({
-                id: MULTI.self.id,
-                choice: index
-            });
+            this.addVote(MULTI.self.id, index);
         }
         else {
             MULTI.broadcast({
                 type: "vote",
                 choice: index
             })
+        }
+    }
+
+    addVote(id, index) {
+        this.votes.push({
+            id: id,
+            choice: index
+        });
+        if (MULTI.isBoss() && this.votes.length == Object.keys(this.players).length + 1) {
+            const decision = this.votes[Math.floor(Math.random() * this.votes.length)];
+            this.leader = decision.id;
+            const choice = this.stage.choices[index];
+            MULTI.broadcast({
+                type: 'change stage',
+                stage: this.quest[choice.target]
+            });
+            this.setStage(this.quest[choice.target]);
         }
     }
 }

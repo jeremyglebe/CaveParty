@@ -87,7 +87,11 @@ class LobbyScene extends Phaser.Scene {
             });
         }
         else if (data.type == 'start game') {
-            this.scene.start("Quest", data.quest);
+            this.scene.start("Quest", {
+                quest: data.quest,
+                players: this.players,
+                leader: MULTI.bossID
+            });
         }
     }
 
@@ -184,7 +188,11 @@ class LobbyScene extends Phaser.Scene {
                         type: 'start game',
                         quest: quest
                     });
-                    this.scene.start('Quest', quest);
+                    this.scene.start('Quest', {
+                        quest: quest,
+                        players: this.players,
+                        leader: MULTI.bossID
+                    });
                 });
         }
     }
