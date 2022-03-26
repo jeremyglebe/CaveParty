@@ -37,6 +37,7 @@ class QuestScene extends Phaser.Scene {
                 this.addVote(peerID, data.choice);
             }
             else if (data.type == 'change stage' && MULTI.isBoss(peerID)) {
+                this.leader = data.leader;
                 this.setStage(data.stage)
             }
         });
@@ -50,7 +51,11 @@ class QuestScene extends Phaser.Scene {
         }
         else if (stage.type == 'fight') {
             if (stage.image == 'sketch') {
-                console.log("Starting a fight boi");
+                this.scene.start('DrawMonster', {
+                    stage: stage,
+                    players: this.players,
+                    leader: this.leader
+                });
             }
             else {
 
@@ -103,7 +108,8 @@ class QuestScene extends Phaser.Scene {
             const choice = this.stage.choices[index];
             MULTI.broadcast({
                 type: 'change stage',
-                stage: this.quest[choice.target]
+                stage: this.quest[choice.target],
+                leader: this.leader
             });
             this.setStage(this.quest[choice.target]);
         }
