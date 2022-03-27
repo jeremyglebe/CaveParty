@@ -43,6 +43,9 @@ class JoinScene extends Phaser.Scene {
         }, "Play")
             .addListener('click')
             .on('click', this.gotoLobby, this);
+
+
+        MULTI.on('error', this.multiplayerError, this);
     }
 
     update() {
@@ -59,6 +62,22 @@ class JoinScene extends Phaser.Scene {
         }
         this.scene.start("Lobby", {
             username: this.usernameInput.node.value
+        });
+    }
+
+    multiplayerError(err) {
+        let etext = this.add.text(GAME_SCALE.center.x, GAME_SCALE.height, err.type, {
+            color: 'red',
+            fontSize: '48px',
+        }).setOrigin(0.5);
+        this.tweens.add({
+            targets: [etext],
+            duration: 5000,
+            alpha: 0,
+            y: GAME_SCALE.height - 300,
+            onComplete: () => {
+                etext.destroy();
+            }
         });
     }
 }
