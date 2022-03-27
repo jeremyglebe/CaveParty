@@ -28,7 +28,7 @@ class DrawMonsterScene extends Phaser.Scene {
             }
             else if (data.type == 'monster complete' && peerID == this.leader) {
                 this.scene.start('Battle', {
-                    stage: stage,
+                    stage: this.stage,
                     players: this.players,
                     sketch: data.sketch,
                     image: 'sketch'
@@ -46,13 +46,14 @@ class DrawMonsterScene extends Phaser.Scene {
                 targets: timer,
                 width: 0,
                 duration: 20000,
+                // duration: 2000,
                 onComplete: () => {
                     MULTI.broadcast({
                         type: 'monster complete',
                         sketch: this.sketch.canvas.toDataURL()
                     });
                     this.scene.start('Battle', {
-                        stage: stage,
+                        stage: this.stage,
                         players: this.players,
                         sketch: this.sketch.canvas.toDataURL(),
                         image: 'sketch'

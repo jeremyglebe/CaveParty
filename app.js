@@ -13,7 +13,8 @@ const gameConfig = {
         JoinScene,
         LobbyScene,
         QuestScene,
-        DrawMonsterScene
+        DrawMonsterScene,
+        BattleScene
     ],
     dom: {
         createContainer: true
