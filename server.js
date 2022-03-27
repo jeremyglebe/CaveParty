@@ -12,7 +12,7 @@ const server = https.createServer(options, app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
     cors: {
-        origin: ["http://127.0.0.1:5501", "https://server.glebe.me:443", "https://jeremyglebe.com:443"]
+        origin: ["http://127.0.0.1:5501", "https://server.glebe.me", "https://jeremyglebe.com"]
     },
     secure: true
 });
