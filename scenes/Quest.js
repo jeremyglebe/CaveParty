@@ -42,8 +42,8 @@ class QuestScene extends Phaser.Scene {
     setStage(stage) {
         console.log("Set Stage: " + JSON.stringify(stage));
         this.stage = stage;
-        if (stage.type == 'choice') {
-            this.choiceStage();
+        if (stage.type == 'dialogue') {
+            this.dialogueStage();
         }
         else if (stage.type == 'fight') {
             if (stage.image == 'sketch') {
@@ -59,7 +59,7 @@ class QuestScene extends Phaser.Scene {
         }
     }
 
-    choiceStage() {
+    dialogueStage() {
         this.div.node.innerHTML = `
         <p>${this.stage.text}</p>
         `
