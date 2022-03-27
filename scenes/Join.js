@@ -14,6 +14,9 @@ class JoinScene extends Phaser.Scene {
     }
 
     create() {
+        this.add.text(0,0,"powered by socket.io", {
+            color: 'white'
+        });
         this.add.text(GAME_SCALE.center.x - 380, GAME_SCALE.height - 300, "Host Game?", {
             color: 'white',
             fontSize: '24px'
