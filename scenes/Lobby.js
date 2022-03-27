@@ -22,6 +22,7 @@ class LobbyScene extends Phaser.Scene {
     }
 
     create() {
+        console.log(MULTI.players);
         this.quests = this.cache.json.get('quests');
         this.gameIDText = this.add.text(GAME_SCALE.center.x, 40, `Game ID: ${MULTI.bossID}`, {
             color: 'white',
