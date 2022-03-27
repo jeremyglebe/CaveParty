@@ -1,6 +1,7 @@
 class JoinScene extends Phaser.Scene {
     constructor() {
         super("Join");
+        this.mp = MultiplayerService.get();
         this.switch = null;
         this.isHost = null;
         this.idInput = null;
@@ -44,8 +45,6 @@ class JoinScene extends Phaser.Scene {
             .addListener('click')
             .on('click', this.gotoLobby, this);
 
-
-        MULTI.on('error', this.multiplayerError, this);
     }
 
     update() {
@@ -55,10 +54,12 @@ class JoinScene extends Phaser.Scene {
 
     gotoLobby() {
         if (this.isHost) {
-            MULTI.createRoom();
+            this.mp.createRoom();
         }
         else {
-            MULTI.joinRoom(this.idInput.node.value);
+            this.mp.joinRoom(this.idInput.node.value, {
+                username: this.usernameInput.node.value
+            });
         }
         this.scene.start("Lobby", {
             username: this.usernameInput.node.value

@@ -1,6 +1,7 @@
 class DrawMonsterScene extends Phaser.Scene {
     constructor() {
         super("DrawMonster");
+        this.mp = MultiplayerService.get();
         this.stage = null;
         this.players = null;
         this.leader = null;
@@ -13,11 +14,10 @@ class DrawMonsterScene extends Phaser.Scene {
     }
 
     create() {
-        MULTI.off('message received');
-        MULTI.on('message received', (peerID, data) => {
-            if (data.type == 'sketch' && peerID == this.leader) {
+        this.mp.on('data from room', (otherID, data, isHost) => {
+            if (data.type == 'sketch' && otherID == this.leader) {
                 if (this.monImage) this.monImage.destroy();
-                const name = `monster-${peerID}-progress-${Date.now()}`
+                const name = `monster-${otherID}-progress-${Date.now()}`
                 this.textures.addBase64(name, data.sketch);
                 // When the texture is done being loaded, create the image!
                 this.textures.on('onload', (textureKey) => {
@@ -26,7 +26,7 @@ class DrawMonsterScene extends Phaser.Scene {
                     }
                 });
             }
-            else if (data.type == 'monster complete' && peerID == this.leader) {
+            else if (data.type == 'monster complete' && otherID == this.leader) {
                 this.scene.start('Battle', {
                     stage: this.stage,
                     players: this.players,
@@ -36,7 +36,7 @@ class DrawMonsterScene extends Phaser.Scene {
             }
         });
         this.createSketchZone();
-        if (this.leader == MULTI.self.id) {
+        if (this.leader == this.mp.id()) {
             this.add.text(GAME_SCALE.center.x, GAME_SCALE.center.y - 250, "Draw a " + this.stage.name + " as quickly as you can!", {
                 color: 'white',
                 fontSize: '24px'
@@ -45,10 +45,10 @@ class DrawMonsterScene extends Phaser.Scene {
             this.tweens.add({
                 targets: timer,
                 width: 0,
-                duration: 20000,
-                // duration: 2000,
+                // duration: 20000,
+                duration: 2000,
                 onComplete: () => {
-                    MULTI.broadcast({
+                    this.mp.broadcast({
                         type: 'monster complete',
                         sketch: this.sketch.canvas.toDataURL()
                     });
@@ -77,7 +77,7 @@ class DrawMonsterScene extends Phaser.Scene {
         this.sketch.setInteractive();
         // Callback to draw when the brush is moved (assuming the pointer is also being pressed)
         this.sketch.on('pointermove', (pointer) => {
-            if (pointer.isDown && MULTI.self.id == this.leader) {
+            if (pointer.isDown && this.mp.id() == this.leader) {
                 // Get the brush's frame, so we can position the drawn brush texture to center on the input
                 let brushTexture = this.textures.getFrame('brush', 0);
                 // X and Y of pointer, relative to the start position of the render texture, and centered on the pointer.
@@ -88,8 +88,8 @@ class DrawMonsterScene extends Phaser.Scene {
             }
         });
         this.sketch.on('pointerup', () => {
-            if (MULTI.self.id == this.leader) {
-                MULTI.broadcast({
+            if (this.mp.id() == this.leader) {
+                this.mp.broadcast({
                     type: 'sketch',
                     sketch: this.sketch.canvas.toDataURL()
                 });

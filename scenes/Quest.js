@@ -1,6 +1,7 @@
 class QuestScene extends Phaser.Scene {
     constructor() {
         super("Quest");
+        this.mp = MultiplayerService.get();
         this.stage = null;
         this.div = null;
     }
@@ -14,11 +15,6 @@ class QuestScene extends Phaser.Scene {
     }
 
     create() {
-        console.log("Quest Scene!");
-
-        MULTI.off('player joined', this.onOtherJoined, this);
-        MULTI.off('message received', this.onMessageReceived, this);
-
         this.div = this.add.dom(GAME_SCALE.center.x, GAME_SCALE.center.y, 'div', {
             width: '600px',
             height: '600px',
@@ -32,11 +28,11 @@ class QuestScene extends Phaser.Scene {
         });
         this.setStage(this.quest["START"]);
 
-        MULTI.on('message received', (peerID, data) => {
-            if (data.type == 'vote' && MULTI.isBoss()) {
-                this.addVote(peerID, data.choice);
+        this.mp.on('data from room', (otherID, data, isHost) => {
+            if (data.type == 'vote' && this.mp.isHost) {
+                this.addVote(otherID, data.choice);
             }
-            else if (data.type == 'change stage' && MULTI.isBoss(peerID)) {
+            else if (data.type == 'change stage' && isHost) {
                 this.leader = data.leader;
                 this.setStage(data.stage)
             }
@@ -86,11 +82,11 @@ class QuestScene extends Phaser.Scene {
     }
 
     makeChoice(index, choice) {
-        if (MULTI.isBoss()) {
-            this.addVote(MULTI.self.id, index);
+        if (this.mp.isHost) {
+            this.addVote(this.mp.id(), index);
         }
         else {
-            MULTI.broadcast({
+            this.mp.broadcast({
                 type: "vote",
                 choice: index
             })
@@ -102,11 +98,11 @@ class QuestScene extends Phaser.Scene {
             id: id,
             choice: index
         });
-        if (MULTI.isBoss() && this.votes.length == Object.keys(this.players).length + 1) {
+        if (this.mp.isHost && this.votes.length == Object.keys(this.players).length + 1) {
             const decision = this.votes[Math.floor(Math.random() * this.votes.length)];
             this.leader = decision.id;
             const choice = this.stage.choices[index];
-            MULTI.broadcast({
+            this.mp.broadcast({
                 type: 'change stage',
                 stage: this.quest[choice.target],
                 leader: this.leader

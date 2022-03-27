@@ -1,6 +1,7 @@
 class LobbyScene extends Phaser.Scene {
     constructor() {
         super("Lobby");
+        this.mp = MultiplayerService.get();
         this.players = {};
         this.quests = null;
         this.gameIDText = null;
@@ -23,7 +24,7 @@ class LobbyScene extends Phaser.Scene {
 
     create() {
         this.quests = this.cache.json.get('quests');
-        this.gameIDText = this.add.text(GAME_SCALE.center.x, 40, `Game ID: ${MULTI.bossID}`, {
+        this.gameIDText = this.add.text(GAME_SCALE.center.x, 40, `Game ID: ${this.mp.room}`, {
             color: 'white',
             fontSize: '36px'
         }).setOrigin(0.5);
@@ -41,56 +42,54 @@ class LobbyScene extends Phaser.Scene {
         this.createSketchZone();
         this.createConfirmButton();
 
-        MULTI.on('player joined', this.onOtherJoined, this);
-        MULTI.on('message received', this.onMessageReceived, this);
+        this.mp.on('other joined', this.onOtherJoined, this);
+        this.mp.on('data from room', this.onMessageReceived, this);
     }
 
     update() {
         this.positionSketches();
-        this.gameIDText.setText(`Game ID: ${MULTI.bossID}`);
+        this.gameIDText.setText(`Game ID: ${this.mp.room}`);
         let str = "";
         for (let ply of Object.values(this.players)) str += ply.username + '\n\n';
         this.playerListDiv.setText("[Player List]\n\n" + str);
         this.tryCreateStartButton();
     }
 
-    onOtherJoined(dataconn) {
-        dataconn.send({
-            type: "username",
+    onOtherJoined(otherID, data) {
+        this.players[otherID] = {
+            username: data.username
+        }
+        this.mp.broadcast({
+            type: 'username',
             username: this.username
         });
     }
 
-    onMessageReceived(peerID, data) {
-        if (data.type == "username" && !(peerID in this.players)) {
+    onMessageReceived(otherID, data, isHost) {
+        if (data.type == "username") {
             // Add the peer's username
-            this.players[peerID] = {
+            this.players[otherID] = {
                 username: data.username
             }
-            // Respond with your username
-            MULTI.players[peerID].send({
-                type: "username",
-                username: this.username
-            });
         }
         else if (data.type == 'sketch') {
-            this.textures.addBase64(`sketch-${peerID}`, data.sketch);
+            this.textures.addBase64(`sketch-${otherID}`, data.sketch);
             // When the texture is done being loaded, create the image!
             this.textures.on('onload', (textureKey) => {
-                if (textureKey == `sketch-${peerID}`) {
-                    this.players[peerID].sketch = this.add.image(0, 0, `sketch-${peerID}`);
-                    this.players[peerID].text = this.add.text(0, 0, this.players[peerID].username, {
+                if (textureKey == `sketch-${otherID}`) {
+                    this.players[otherID].sketch = this.add.image(0, 0, `sketch-${otherID}`);
+                    this.players[otherID].text = this.add.text(0, 0, this.players[otherID].username, {
                         color: 'white',
                         fontSize: '16px'
                     }).setOrigin(0.5);
                 }
             });
         }
-        else if (data.type == 'start game') {
+        else if (data.type == 'start game' && isHost) {
             this.scene.start("Quest", {
                 quest: data.quest,
                 players: this.players,
-                leader: MULTI.bossID
+                leader: otherID
             });
         }
     }
@@ -128,7 +127,7 @@ class LobbyScene extends Phaser.Scene {
     }
 
     readyUp(circle, check) {
-        MULTI.broadcast({
+        this.mp.broadcast({
             type: 'sketch',
             sketch: this.sketch.canvas.toDataURL()
         });
@@ -173,7 +172,7 @@ class LobbyScene extends Phaser.Scene {
     }
 
     tryCreateStartButton() {
-        if (MULTI.isBoss() && this.everyoneReady() && !this.startButton) {
+        if (this.mp.isHost && this.everyoneReady() && !this.startButton) {
             this.startButton = this.add.dom(GAME_SCALE.center.x, 700, 'button', {
                 height: '100px',
                 width: '400px',
@@ -184,14 +183,14 @@ class LobbyScene extends Phaser.Scene {
                     const questList = Object.values(this.quests)
                     const quest = questList[Math.floor(Math.random() * questList.length)]
                     console.log(quest);
-                    MULTI.broadcast({
+                    this.mp.broadcast({
                         type: 'start game',
                         quest: quest
                     });
                     this.scene.start('Quest', {
                         quest: quest,
                         players: this.players,
-                        leader: MULTI.bossID
+                        leader: this.mp.id()
                     });
                 });
         }

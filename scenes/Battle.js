@@ -1,6 +1,7 @@
 class BattleScene extends Phaser.Scene {
     constructor() {
         super("Battle");
+        this.mp = MultiplayerService.get();
         this.monster = null;
         this.health = null;
         this.bar = null;
@@ -25,7 +26,7 @@ class BattleScene extends Phaser.Scene {
                         .setInteractive()
                         .on('pointerdown', () => {
                             this.attackMonster(5);
-                            MULTI.broadcast({
+                            this.mp.broadcast({
                                 type: 'attack',
                                 damage: 5
                             });
@@ -34,7 +35,8 @@ class BattleScene extends Phaser.Scene {
             });
         }
         this.bar = this.add.rectangle(GAME_SCALE.center.x, GAME_SCALE.center.y + 200, 800, 40, 0xFFFFFF);
-        MULTI.on('message received', (peerID, data) => {
+        this.mp.on('data from room', (otherID, data, isHost) => {
+            console.log("click clack");
             if (data.type == 'attack') {
                 this.attackMonster(data.damage);
             }
