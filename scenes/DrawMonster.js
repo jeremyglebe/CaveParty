@@ -34,8 +34,8 @@ class DrawMonsterScene extends Phaser.Scene {
             this.tweens.add({
                 targets: timer,
                 width: 0,
-                // duration: 15000,
-                duration: 3000,
+                duration: 15000,
+                // duration: 3000,
                 onComplete: () => {
                     this.mp.broadcast({
                         type: 'monster complete',
