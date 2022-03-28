@@ -1,21 +1,13 @@
 class DrawMonsterScene extends Phaser.Scene {
     constructor() {
         super("DrawMonster");
+        this.state = QuestState.get();
         this.mp = MultiplayerService.get();
-        this.stage = null;
-        this.players = null;
-        this.leader = null;
-    }
-
-    init(data) {
-        this.stage = data.stage;
-        this.players = data.players;
-        this.leader = data.leader;
     }
 
     create() {
         this.mp.on('data from room', (otherID, data, isHost) => {
-            if (data.type == 'sketch' && otherID == this.leader) {
+            if (data.type == 'sketch' && otherID == this.state.leader) {
                 if (this.monImage) this.monImage.destroy();
                 const name = `monster-${otherID}-progress-${Date.now()}`
                 this.textures.addBase64(name, data.sketch);
@@ -26,18 +18,15 @@ class DrawMonsterScene extends Phaser.Scene {
                     }
                 });
             }
-            else if (data.type == 'monster complete' && otherID == this.leader) {
-                this.scene.start('Battle', {
-                    stage: this.stage,
-                    players: this.players,
-                    sketch: data.sketch,
-                    image: 'sketch'
-                });
+            else if (data.type == 'monster complete' && otherID == this.state.leader) {
+                this.state.monster.image = 'sketch';
+                this.state.monster.sketch = data.sketch;
+                this.scene.start('Battle');
             }
         });
         this.createSketchZone();
-        if (this.leader == this.mp.id()) {
-            this.add.text(GAME_SCALE.center.x, GAME_SCALE.center.y - 250, "Draw a " + this.stage.name + " as quickly as you can!", {
+        if (this.state.leader == this.mp.id()) {
+            this.add.text(GAME_SCALE.center.x, GAME_SCALE.center.y - 250, "Draw a " + this.state.stage.name + " as quickly as you can!", {
                 color: 'white',
                 fontSize: '24px'
             }).setOrigin(0.5);
@@ -45,24 +34,22 @@ class DrawMonsterScene extends Phaser.Scene {
             this.tweens.add({
                 targets: timer,
                 width: 0,
-                duration: 15000,
-                // duration: 2000,
+                // duration: 15000,
+                duration: 3000,
                 onComplete: () => {
                     this.mp.broadcast({
                         type: 'monster complete',
                         sketch: this.sketch.canvas.toDataURL()
                     });
-                    this.scene.start('Battle', {
-                        stage: this.stage,
-                        players: this.players,
-                        sketch: this.sketch.canvas.toDataURL(),
-                        image: 'sketch'
-                    });
+                    this.state.monster.image = 'sketch';
+                    this.state.monster.sketch = this.sketch.canvas.toDataURL();
+                    this.scene.start('Battle');
                 }
             });
         }
         else {
-            this.add.text(GAME_SCALE.center.x, GAME_SCALE.center.y - 250, this.players[this.leader].username + " is drawing a " + this.stage.name + "!", {
+            console.log(this.state);
+            this.add.text(GAME_SCALE.center.x, GAME_SCALE.center.y - 250, this.state.players[this.state.leader].username + " is drawing a " + this.state.stage.name + "!", {
                 color: 'white',
                 fontSize: '24px'
             }).setOrigin(0.5);
@@ -77,7 +64,7 @@ class DrawMonsterScene extends Phaser.Scene {
         this.sketch.setInteractive();
         // Callback to draw when the brush is moved (assuming the pointer is also being pressed)
         this.sketch.on('pointermove', (pointer) => {
-            if (pointer.isDown && this.mp.id() == this.leader) {
+            if (pointer.isDown && this.mp.id() == this.state.leader) {
                 // Get the brush's frame, so we can position the drawn brush texture to center on the input
                 let brushTexture = this.textures.getFrame('brush', 0);
                 // X and Y of pointer, relative to the start position of the render texture, and centered on the pointer.
@@ -88,7 +75,7 @@ class DrawMonsterScene extends Phaser.Scene {
             }
         });
         this.sketch.on('pointerup', () => {
-            if (this.mp.id() == this.leader) {
+            if (this.mp.id() == this.state.leader) {
                 this.mp.broadcast({
                     type: 'sketch',
                     sketch: this.sketch.canvas.toDataURL()

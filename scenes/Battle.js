@@ -1,28 +1,21 @@
 class BattleScene extends Phaser.Scene {
     constructor() {
         super("Battle");
+        this.state = QuestState.get();
         this.mp = MultiplayerService.get();
         this.monster = null;
         this.health = null;
         this.bar = null;
     }
 
-    init(data) {
-        this.stage = data.stage;
-        this.players = data.players;
-        this.sketch = data.sketch;
-        this.image = data.image;
-        this.health = this.stage.health;
-        this.damage = this.stage.damage;
-    }
-
     create() {
-        if (this.image == 'sketch') {
-            this.textures.addBase64(this.stage.name, this.sketch);
+        this.health = this.state.stage.health;
+        if (this.state.monster.image == 'sketch') {
+            this.textures.addBase64(this.state.stage.name, this.state.monster.sketch);
             // When the texture is done being loaded, create the image!
             this.textures.on('onload', (textureKey) => {
-                if (textureKey == this.stage.name) {
-                    this.monster = this.add.image(GAME_SCALE.center.x, GAME_SCALE.center.y, this.stage.name)
+                if (textureKey == this.state.stage.name) {
+                    this.monster = this.add.image(GAME_SCALE.center.x, GAME_SCALE.center.y, this.state.stage.name)
                         .setInteractive()
                         .on('pointerdown', () => {
                             this.attackMonster(5);
@@ -36,7 +29,7 @@ class BattleScene extends Phaser.Scene {
         }
         this.bar = this.add.rectangle(GAME_SCALE.center.x, GAME_SCALE.center.y + 200, 800, 40, 0xFFFFFF);
         this.mp.on('data from room', (otherID, data, isHost) => {
-            console.log("click clack");
+            console.log("another player attacked");
             if (data.type == 'attack') {
                 this.attackMonster(data.damage);
             }
@@ -44,21 +37,14 @@ class BattleScene extends Phaser.Scene {
     }
 
     update() {
-        this.bar.setScale(this.health / this.stage.health, 1);
+        this.bar.setScale(this.health / this.state.stage.health, 1);
     }
 
     attackMonster(dmg) {
         if (this.health > 0) {
             this.health -= dmg;
             if (this.health <= 0) {
-                this.health = 0;
-                this.tweens.add({
-                    targets: this.monster,
-                    scale: 0,
-                    angle: 1200,
-                    alpha: 0,
-                    duration: 1000
-                });
+                this.killMonster();
             }
             else {
                 this.tweens.add({
@@ -71,6 +57,21 @@ class BattleScene extends Phaser.Scene {
                 });
             }
         }
+    }
+
+    killMonster() {
+        this.health = 0;
+        this.tweens.add({
+            targets: this.monster,
+            scale: 0,
+            angle: 1200,
+            alpha: 0,
+            duration: 1000,
+            onComplete: () => {
+                this.state.stage = this.state.stage.target;
+                this.scene.start('Quest');
+            }
+        });
     }
 
     hitAngle() {

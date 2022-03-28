@@ -1,6 +1,7 @@
 class JoinScene extends Phaser.Scene {
     constructor() {
         super("Join");
+        this.state = QuestState.get();
         this.mp = MultiplayerService.get();
         this.switch = null;
         this.isHost = null;
@@ -14,7 +15,7 @@ class JoinScene extends Phaser.Scene {
     }
 
     create() {
-        this.add.text(0,0,"powered by socket.io", {
+        this.add.text(0, 0, "powered by socket.io", {
             color: 'white'
         });
         this.add.text(GAME_SCALE.center.x - 380, GAME_SCALE.height - 300, "Host Game?", {
@@ -53,6 +54,7 @@ class JoinScene extends Phaser.Scene {
     update() {
         this.isHost = this.switch.getChildByID('toggle').checked;
         this.idInput.node.disabled = this.isHost;
+        this.state.username = this.usernameInput.node.value;
     }
 
     gotoLobby() {
@@ -61,12 +63,10 @@ class JoinScene extends Phaser.Scene {
         }
         else {
             this.mp.joinRoom(this.idInput.node.value, {
-                username: this.usernameInput.node.value
+                username: this.state.username
             });
         }
-        this.scene.start("Lobby", {
-            username: this.usernameInput.node.value
-        });
+        this.scene.start("Lobby");
     }
 
     multiplayerError(err) {

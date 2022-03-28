@@ -1,17 +1,10 @@
 class QuestScene extends Phaser.Scene {
     constructor() {
         super("Quest");
+        this.state = QuestState.get();
         this.mp = MultiplayerService.get();
-        this.stage = null;
         this.div = null;
-    }
-
-    init(data) {
-        this.quest = data.quest;
-        this.players = data.players;
-        this.leader = data.leader;
         this.votes = [];
-        console.log(this.quest);
     }
 
     create() {
@@ -26,7 +19,7 @@ class QuestScene extends Phaser.Scene {
             paddingLeft: '20px',
             paddingRight: '20px'
         });
-        this.setStage(this.quest["START"]);
+        this.setStage(this.state.stage);
 
         this.mp.on('data from room', (otherID, data, isHost) => {
             if (data.type == 'vote' && this.mp.isHost) {
@@ -40,8 +33,7 @@ class QuestScene extends Phaser.Scene {
     }
 
     setStage(stage) {
-        console.log("Set Stage: " + JSON.stringify(stage));
-        this.stage = stage;
+        this.state.stage = stage;
         if (stage.type == 'dialogue') {
             this.dialogueStage();
         }
@@ -49,7 +41,7 @@ class QuestScene extends Phaser.Scene {
             if (stage.image == 'sketch') {
                 this.scene.start('DrawMonster', {
                     stage: stage,
-                    players: this.players,
+                    players: this.state.players,
                     leader: this.leader
                 });
             }
@@ -61,10 +53,10 @@ class QuestScene extends Phaser.Scene {
 
     dialogueStage() {
         this.div.node.innerHTML = `
-        <p>${this.stage.text}</p>
+        <p>${this.state.stage.text}</p>
         `
-        for (let i = 0; i < this.stage.choices.length; i++) {
-            const choice = this.stage.choices[i];
+        for (let i = 0; i < this.state.stage.choices.length; i++) {
+            const choice = this.state.stage.choices[i];
             let button = document.createElement('button');
             button.onclick = () => {
                 this.makeChoice(i, choice);
@@ -98,16 +90,16 @@ class QuestScene extends Phaser.Scene {
             id: id,
             choice: index
         });
-        if (this.mp.isHost && this.votes.length == Object.keys(this.players).length + 1) {
+        if (this.mp.isHost && this.votes.length == Object.keys(this.state.players).length + 1) {
             const decision = this.votes[Math.floor(Math.random() * this.votes.length)];
             this.leader = decision.id;
-            const choice = this.stage.choices[index];
+            const choice = this.state.stage.choices[index];
             this.mp.broadcast({
                 type: 'change stage',
-                stage: this.quest[choice.target],
+                stage: this.state.quest[choice.target],
                 leader: this.leader
             });
-            this.setStage(this.quest[choice.target]);
+            this.setStage(this.state.quest[choice.target]);
         }
     }
 }

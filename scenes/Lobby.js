@@ -1,6 +1,7 @@
 class LobbyScene extends Phaser.Scene {
     constructor() {
         super("Lobby");
+        this.state = QuestState.get();
         this.mp = MultiplayerService.get();
         this.players = {};
         this.quests = null;
@@ -8,13 +9,8 @@ class LobbyScene extends Phaser.Scene {
         this.playerListDiv = null;
         this.panel = null;
         this.sketch = null;
-        this.username = null;
         this.ready = false;
         this.startButton = null;
-    }
-
-    init(data) {
-        this.username = data.username;
     }
 
     preload() {
@@ -61,7 +57,7 @@ class LobbyScene extends Phaser.Scene {
         }
         this.mp.broadcast({
             type: 'username',
-            username: this.username
+            username: this.state.username
         });
     }
 
@@ -86,11 +82,11 @@ class LobbyScene extends Phaser.Scene {
             });
         }
         else if (data.type == 'start game' && isHost) {
-            this.scene.start("Quest", {
-                quest: data.quest,
-                players: this.players,
-                leader: otherID
-            });
+            this.state.quest = data.quest;
+            this.state.stage = data.quest["START"]
+            this.state.players = this.players;
+            this.state.leader = otherID;
+            this.scene.start("Quest");
         }
     }
 
@@ -187,11 +183,11 @@ class LobbyScene extends Phaser.Scene {
                         type: 'start game',
                         quest: quest
                     });
-                    this.scene.start('Quest', {
-                        quest: quest,
-                        players: this.players,
-                        leader: this.mp.id()
-                    });
+                    this.state.quest = quest;
+                    this.state.stage = quest["START"];
+                    this.state.players = this.players;
+                    this.state.leader = this.mp.id();
+                    this.scene.start('Quest');
                 });
         }
     }
